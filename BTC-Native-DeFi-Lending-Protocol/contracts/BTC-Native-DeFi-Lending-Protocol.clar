@@ -81,3 +81,31 @@
   }
 )
 
+;; Contract initialization
+(define-data-var contract-initialized bool false)
+
+;; Access control - only contract owner
+(define-private (check-owner)
+  (if (is-eq tx-sender CONTRACT_OWNER)
+    (ok true)
+    ERR_UNAUTHORIZED
+  )
+)
+
+;; Access control - check if protocol is operational
+(define-private (check-protocol-active)
+  (if (var-get protocol-paused)
+    ERR_PROTOCOL_PAUSED
+    (ok true)
+  )
+)
+
+
+;; Initialize protocol with initial supported assets
+(define-public (initialize-protocol (initial-assets (list 10 principal)))
+  (begin
+    (asserts! (not (var-get contract-initialized)) ERR_UNAUTHORIZED)
+    (var-set contract-initialized true)
+    (ok true)
+  )
+)

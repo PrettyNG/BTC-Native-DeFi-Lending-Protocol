@@ -272,3 +272,38 @@
     repaid: bool
   }
 )
+
+(define-private (verify-flash-loan-repayment (loan-id uint))
+  (let 
+    (
+      (loan-data (unwrap! (map-get? active-flash-loans { loan-id: loan-id }) ERR_FLASH_LOAN_NOT_REPAID))
+      (required-amount (+ (get amount loan-data) (get fee loan-data)))
+    )
+    
+    ;; Mark as repaid (simplified verification)
+    (map-set active-flash-loans
+      { loan-id: loan-id }
+      (merge loan-data { repaid: true })
+    )
+    
+    (ok true)
+  )
+)
+
+(define-constant ERR_REWARD_CALCULATION_FAILED (err u210))
+(define-constant ERR_INSUFFICIENT_REWARDS (err u211))
+
+;; Reward token (could be a governance token)
+(define-data-var reward-token principal 'SP000000000000000000002Q6VF78.reward-token)
+(define-data-var total-reward-pool uint u1000000000000) ;; 1M reward tokens
+(define-data-var reward-per-block uint u100) ;; Rewards distributed per block
+
+;; User reward tracking
+(define-map user-rewards
+  { user: principal }
+  {
+    pending-rewards: uint,
+    last-claim-block: uint,
+    total-claimed: uint
+  }
+)

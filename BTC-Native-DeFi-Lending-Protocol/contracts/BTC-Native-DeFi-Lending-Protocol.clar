@@ -307,3 +307,51 @@
     total-claimed: uint
   }
 )
+
+;; Market reward multipliers
+(define-map market-reward-multipliers
+  { asset-contract: principal }
+  { supply-multiplier: uint, borrow-multiplier: uint }
+)
+
+(define-public (set-reward-multipliers 
+    (asset-contract principal) 
+    (supply-multiplier uint) 
+    (borrow-multiplier uint)
+  )
+  (begin
+    (try! (check-owner))
+    (map-set market-reward-multipliers
+      { asset-contract: asset-contract }
+      { supply-multiplier: supply-multiplier, borrow-multiplier: borrow-multiplier }
+    )
+    (ok true)
+  )
+)
+
+(define-public (claim-rewards)
+  (let 
+    (
+      (user-reward-data (default-to 
+        { pending-rewards: u0, last-claim-block: u0, total-claimed: u0 }
+        (map-get? user-rewards { user: tx-sender })
+      ))
+      (pending-amount (get pending-rewards user-reward-data))
+    )
+    
+    (asserts! (> pending-amount u0) ERR_INSUFFICIENT_REWARDS)
+    
+    ;; Update user rewards
+    (map-set user-rewards
+      { user: tx-sender }
+      {
+        pending-rewards: u0,
+        last-claim-block: stacks-block-height,
+        total-claimed: (+ (get total-claimed user-reward-data) pending-amount)
+      }
+    )
+    
+    ;; Transfer rewards (simplified)
+    (ok pending-amount)
+  )
+)

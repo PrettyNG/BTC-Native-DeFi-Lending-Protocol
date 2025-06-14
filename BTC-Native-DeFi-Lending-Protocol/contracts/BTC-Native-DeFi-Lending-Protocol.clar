@@ -26,3 +26,31 @@
 (define-data-var optimal-utilization uint u800) ;; 80% optimal utilization rate
 (define-data-var reserve-factor uint u100) ;; 10% of interest goes to reserves
 
+;; SIP-010 compliant tokens that can be used as collateral or borrowed
+(define-map supported-assets 
+  { asset-contract: principal }
+  {
+    collateral-factor: uint, ;; max borrow value per collateral value (75% = 750)
+    borrow-enabled: bool, 
+    collateral-enabled: bool,
+    price-oracle: principal ;; Oracle contract with get-price function
+  }
+)
+
+;; Protocol reserves
+(define-map token-reserves 
+  { asset-contract: principal }
+  { amount: uint }
+)
+
+;; Market data per asset
+(define-map market-data
+  { asset-contract: principal }
+  {
+    total-supplied: uint,
+    total-borrowed: uint,
+    supply-apy: uint,
+    borrow-apy: uint,
+    last-update-block: uint
+  }
+)
